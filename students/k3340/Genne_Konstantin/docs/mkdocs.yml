@@ -1,0 +1,18 @@
+site_name: Отчеты по лабораторным работам. Генне Константин, K3340
+
+theme:
+  name: windmill
+  language: ru
+  palette:
+    scheme: default
+  features:
+    - navigation.tabs
+    - navigation.top
+    
+nav:
+  - 'Главная': 'index.md'
+  - 'Лабораторная работа №1':
+    - 'Практическое задание 1': 'lr1/practice_1.md'
+    - 'Практическое задание 2': 'lr1/practice_2.md'
+    - 'Практическое задание 3': 'lr1/practice_3.md'
+    - 'Лабораторная работа': 'lr1/lr1.md'
