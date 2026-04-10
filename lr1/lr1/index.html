@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+  
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    
+    
+    <link rel="shortcut icon" href="../../img/favicon.ico">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+    <title>Лабораторная работа - Отчеты по лабораторным работам. Генне Константин, K3340</title>
+    <link href="../../css/bootstrap-3.3.7.min.css" rel="stylesheet">
+    <link href="../../css/font-awesome-4.7.0.css" rel="stylesheet">
+    <link href="../../css/base.css" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/highlight.css">
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+    <![endif]-->
+
+    <script src="../../js/jquery-3.2.1.min.js"></script>
+    <script src="../../js/bootstrap-3.3.7.min.js"></script>
+    <script src="../../js/highlight.pack.js"></script>
+    
+    <base target="_top">
+    <script>
+      var base_url = '../..';
+      var is_top_frame = false;
+        
+        var pageToc = [
+          {title: "\u041e\u0442\u0447\u0451\u0442 \u043f\u043e \u043b\u0430\u0431\u043e\u0440\u0430\u0442\u043e\u0440\u043d\u043e\u0439 \u0440\u0430\u0431\u043e\u0442\u0435 \u21161", url: "#_top", children: [
+              {title: "\u0420\u0435\u0430\u043b\u0438\u0437\u0430\u0446\u0438\u044f \u0441\u0435\u0440\u0432\u0435\u0440\u043d\u043e\u0433\u043e \u043f\u0440\u0438\u043b\u043e\u0436\u0435\u043d\u0438\u044f FastAPI", url: "#fastapi" },
+              {title: "\u0426\u0435\u043b\u044c \u0440\u0430\u0431\u043e\u0442\u044b", url: "#_1" },
+              {title: "\u0421\u0442\u0440\u0443\u043a\u0442\u0443\u0440\u0430 \u043f\u0440\u043e\u0435\u043a\u0442\u0430", url: "#_2" },
+              {title: "\u041f\u043e\u0434\u043a\u043b\u044e\u0447\u0435\u043d\u0438\u0435 \u043a \u0431\u0430\u0437\u0435 \u0434\u0430\u043d\u043d\u044b\u0445", url: "#_3" },
+              {title: "\u0421\u0445\u0435\u043c\u0430 \u0431\u0430\u0437\u044b \u0434\u0430\u043d\u043d\u044b\u0445", url: "#_4" },
+              {title: "\u0420\u0435\u0430\u043b\u0438\u0437\u043e\u0432\u0430\u043d\u043d\u044b\u0435 \u044d\u043d\u0434\u043f\u043e\u0438\u043d\u0442\u044b", url: "#_5" },
+              {title: "\u0410\u0443\u0442\u0435\u043d\u0442\u0438\u0444\u0438\u043a\u0430\u0446\u0438\u044f", url: "#_6" },
+              {title: "\u041c\u0438\u0433\u0440\u0430\u0446\u0438\u0438 (Alembic)", url: "#alembic" },
+              {title: "\u0417\u0430\u043f\u0443\u0441\u043a \u043f\u0440\u043e\u0435\u043a\u0442\u0430", url: "#_9" },
+          ]},
+        ];
+
+    </script>
+    <script src="../../js/base.js"></script> 
+</head>
+
+<body>
+<script>
+if (is_top_frame) { $('body').addClass('wm-top-page'); }
+</script>
+
+
+
+<div class="container-fluid wm-page-content">
+  <a name="_top"></a>
+    
+
+    
+    
+      
+    
+
+  <div class="row wm-article-nav-buttons" role="navigation" aria-label="navigation">
+    
+    <div class="wm-article-nav">
+      <a href="../practice_3/" class="btn btn-xs btn-default pull-left">
+        <i class="fa fa-chevron-left" aria-hidden="true"></i>
+        Previous</a><a href="../practice_3/" class="btn btn-xs btn-link">
+        Практическое задание 3
+      </a>
+    </div>
+    
+  </div>
+
+    
+
+    <h1 id="no1">Отчёт по лабораторной работе №1</h1>
+<h2 id="fastapi">Реализация серверного приложения FastAPI</h2>
+<hr />
+<h2 id="_1">Цель работы</h2>
+<p>Научится реализовывать полноценное серверное приложение с помощью фреймворка FastAPI с применением дополнительных средств и библиотек.</p>
+<hr />
+<h2 id="_2">Структура проекта</h2>
+<pre><code>app/
+├── core/
+│   ├── database.py      # Подключение к БД, сессии
+│   ├── auth.py          # JWT-аутентификация, зависимости
+│   └── config.py        # Настройки приложения
+├── models/              # SQLModel-модели (таблицы БД)
+│   ├── task.py
+│   ├── task_tag.py
+│   ├── tag.py
+│   ├── workspace.py
+│   ├── time_log.py
+│   └── user.py
+├── schemas/
+│   ├── task.py
+│   ├── task_tag.py
+│   ├── tag.py
+│   ├── workspace.py
+│   ├── time_log.py
+│   ├── user.py
+│   └── analytics.py
+├── routers/             # Эндпоинты API
+│   ├── tasks.py
+│   ├── tags.py
+│   ├── workspaces.py
+│   └── analytics.py
+|   └── auth.py
+├── main.py              # Точка входа, регистрация роутеров
+└── alembic/             # Миграции БД
+</code></pre>
+<hr />
+<h2 id="_3">Подключение к базе данных</h2>
+<h3 id="appcoredatabasepy"><code>app/core/database.py</code></h3>
+<pre><code class="language-python">from sqlmodel import SQLModel, create_engine, Session
+from app.core.config import get_settings
+
+settings = get_settings()
+
+engine = create_engine(settings.DATABASE_URL, echo=False)
+
+
+def init_db():
+    SQLModel.metadata.create_all(engine)
+
+
+def get_session():
+    with Session(engine) as session:
+        yield session
+</code></pre>
+<h3 id="appcoreconfigpy"><code>app/core/config.py</code></h3>
+<pre><code class="language-python">from pydantic_settings import BaseSettings
+from functools import lru_cache
+
+
+class Settings(BaseSettings):
+    DATABASE_URL: str
+    SECRET_KEY: str
+    ALGORITHM: str
+    ACCESS_TOKEN_EXPIRE_MINUTES: int
+
+    class Config:
+        env_file = &quot;.env&quot;
+
+
+@lru_cache()
+def get_settings() -&gt; Settings:
+    return Settings()
+</code></pre>
+<hr />
+<h2 id="_4">Схема базы данных</h2>
+<p><img alt="Схема базы данных" src="../images/erd.png" /></p>
+<hr />
+<h2 id="_5">Реализованные эндпоинты</h2>
+<h3 id="apiauth">Аутентификация и пользователи (<code>/api/auth</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>Метод</th>
+<th>Путь</th>
+<th>Описание</th>
+<th><code>response_model</code></th>
+<th>Доступ</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>POST</code></td>
+<td><code>/register</code></td>
+<td>Регистрация нового пользователя</td>
+<td><code>UserOut</code></td>
+<td>Публичный</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/login</code></td>
+<td>Вход в систему, получение JWT</td>
+<td><code>Token</code></td>
+<td>Публичный</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/me</code></td>
+<td>Данные текущего пользователя</td>
+<td><code>UserOut</code></td>
+<td>Авторизованный</td>
+</tr>
+<tr>
+<td><code>PUT</code></td>
+<td><code>/change-password</code></td>
+<td>Смена пароля текущего пользователя</td>
+<td><code>dict</code> (<code>200 OK</code>)</td>
+<td>Авторизованный</td>
+</tr>
+</tbody>
+</table>
+<h3 id="apitasks">Задачи (<code>/api/tasks</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>Метод</th>
+<th>Путь</th>
+<th>Описание</th>
+<th><code>response_model</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>POST</code></td>
+<td><code>/</code></td>
+<td>Создание задачи с тегами</td>
+<td><code>TaskOut</code></td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/</code></td>
+<td>Список задач с пагинацией и фильтрацией</td>
+<td><code>TaskListOut</code></td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/{id}</code></td>
+<td>Получение задачи с вложенными данными</td>
+<td><code>TaskOut</code></td>
+</tr>
+<tr>
+<td><code>PATCH</code></td>
+<td><code>/{id}</code></td>
+<td>Частичное обновление задачи</td>
+<td><code>TaskOut</code></td>
+</tr>
+<tr>
+<td><code>DELETE</code></td>
+<td><code>/{id}</code></td>
+<td>Удаление задачи</td>
+<td><code>204 No Content</code></td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/{id}/timer/start</code></td>
+<td>Запуск таймера учёта времени</td>
+<td><code>TimeLogRead</code></td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/{id}/timer/pause</code></td>
+<td>Пауза таймера</td>
+<td><code>TimeLogRead</code></td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/{id}/timer/stop</code></td>
+<td>Остановка таймера</td>
+<td><code>TimeLogRead</code></td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/upcoming-deadlines/</code></td>
+<td>Задачи с ближайшими дедлайнами</td>
+<td><code>TaskListOut</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="apitags">Теги (<code>/api/tags</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>Метод</th>
+<th>Путь</th>
+<th>Описание</th>
+<th><code>response_model</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>POST</code></td>
+<td><code>/</code></td>
+<td>Создание тега</td>
+<td><code>TagRead</code></td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/</code></td>
+<td>Список тегов пользователя</td>
+<td><code>TagListOut</code></td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/{id}</code></td>
+<td>Получение тега</td>
+<td><code>TagRead</code></td>
+</tr>
+<tr>
+<td><code>PUT</code></td>
+<td><code>/{id}</code></td>
+<td>Полное обновление тега</td>
+<td><code>TagRead</code></td>
+</tr>
+<tr>
+<td><code>DELETE</code></td>
+<td><code>/{id}</code></td>
+<td>Удаление тега</td>
+<td><code>204 No Content</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="apiworkspaces">Рабочие пространства (<code>/api/workspaces</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>Метод</th>
+<th>Путь</th>
+<th>Описание</th>
+<th><code>response_model</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>POST</code></td>
+<td><code>/</code></td>
+<td>Создание пространства</td>
+<td><code>WorkspaceRead</code></td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/</code></td>
+<td>Список пространств</td>
+<td><code>WorkspaceListOut</code></td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/{id}</code></td>
+<td>Пространство с задачами</td>
+<td><code>WorkspaceWithTasksRead</code></td>
+</tr>
+<tr>
+<td><code>PATCH</code></td>
+<td><code>/{id}</code></td>
+<td>Обновление пространства</td>
+<td><code>WorkspaceRead</code></td>
+</tr>
+<tr>
+<td><code>DELETE</code></td>
+<td><code>/{id}</code></td>
+<td>Удаление пространства</td>
+<td><code>204 No Content</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="apianalytics">Аналитика (<code>/api/analytics</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>Метод</th>
+<th>Путь</th>
+<th>Описание</th>
+<th><code>response_model</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GET</code></td>
+<td><code>/total-time</code></td>
+<td>Общее время работы пользователя</td>
+<td><code>TotalTimeResponse</code></td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/by-tag</code></td>
+<td>Время по тегам</td>
+<td><code>TagTimeResponse</code></td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/by-workspace</code></td>
+<td>Время по рабочим пространствам</td>
+<td><code>WorkspaceTimeResponse</code></td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/by-period</code></td>
+<td>Время за период</td>
+<td><code>PeriodTimeResponse</code></td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/task/{id}</code></td>
+<td>Детализация времени по задаче</td>
+<td><code>TaskTimeResponse</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_6">Аутентификация</h2>
+<ul>
+<li><strong>JWT-токены</strong> с алгоритмом HS256</li>
+<li><strong>Зависимость</strong> <code>get_current_user</code> для защиты эндпоинтов</li>
+<li><strong>Изоляция данных</strong>: каждый пользователь видит только свои задачи, теги и пространства</li>
+<li><strong>Валидация прав доступа</strong> при операциях с чужими ресурсами (возврат <code>403 Forbidden</code>)</li>
+</ul>
+<hr />
+<h2 id="alembic">Миграции (Alembic)</h2>
+<h3 id="_7">Генерация миграции</h3>
+<pre><code class="language-bash">alembic revision --autogenerate -m &quot;add_tasks_table&quot;
+</code></pre>
+<h3 id="_8">Применение миграций</h3>
+<pre><code class="language-bash">alembic upgrade head      # Применить все миграции
+alembic downgrade -1      # Откатить последнюю
+alembic current           # Показать текущую версию
+</code></pre>
+<hr />
+<h2 id="_9">Запуск проекта</h2>
+<pre><code class="language-bash"># 1. Установка зависимостей
+pip install -r requirements.txt
+
+# 2. Настройка переменных окружения
+cp .env.example .env
+# Отредактировать DATABASE_URL, SECRET_KEY
+
+# 3. Применение миграций
+alembic upgrade head
+
+# 4. Запуск сервера
+fastapi dev app/main.py
+# или для продакшена:
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+</code></pre>
+
+  <br>
+    
+
+    
+    
+      
+    
+
+  <div class="row wm-article-nav-buttons" role="navigation" aria-label="navigation">
+    
+    <div class="wm-article-nav">
+      <a href="../practice_3/" class="btn btn-xs btn-default pull-left">
+        <i class="fa fa-chevron-left" aria-hidden="true"></i>
+        Previous</a><a href="../practice_3/" class="btn btn-xs btn-link">
+        Практическое задание 3
+      </a>
+    </div>
+    
+  </div>
+
+    <br>
+</div>
+
+<footer class="container-fluid wm-page-content">
+  <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a> using <a href="https://github.com/gristlabs/mkdocs-windmill">Windmill</a> theme by Grist Labs.</p>
+</footer>
+
+</body>
+</html>

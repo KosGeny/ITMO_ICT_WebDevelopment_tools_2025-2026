@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+  
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    
+    
+    <link rel="shortcut icon" href="../../img/favicon.ico">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+    <title>Практическое задание 2 - Отчеты по лабораторным работам. Генне Константин, K3340</title>
+    <link href="../../css/bootstrap-3.3.7.min.css" rel="stylesheet">
+    <link href="../../css/font-awesome-4.7.0.css" rel="stylesheet">
+    <link href="../../css/base.css" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/highlight.css">
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+    <![endif]-->
+
+    <script src="../../js/jquery-3.2.1.min.js"></script>
+    <script src="../../js/bootstrap-3.3.7.min.js"></script>
+    <script src="../../js/highlight.pack.js"></script>
+    
+    <base target="_top">
+    <script>
+      var base_url = '../..';
+      var is_top_frame = false;
+        
+        var pageToc = [
+          {title: "\u041f\u0440\u0430\u043a\u0442\u0438\u043a\u0430 1.2. \u041d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0430 \u0411\u0414, SQLModel \u0438 \u043c\u0438\u0433\u0440\u0430\u0446\u0438\u0438 \u0447\u0435\u0440\u0435\u0437 Alembic", url: "#_top", children: [
+              {title: "connection.py", url: "#connectionpy" },
+              {title: "main.py", url: "#mainpy" },
+              {title: "models.py", url: "#modelspy" },
+          ]},
+        ];
+
+    </script>
+    <script src="../../js/base.js"></script> 
+</head>
+
+<body>
+<script>
+if (is_top_frame) { $('body').addClass('wm-top-page'); }
+</script>
+
+
+
+<div class="container-fluid wm-page-content">
+  <a name="_top"></a>
+    
+
+    
+    
+      
+    
+
+  <div class="row wm-article-nav-buttons" role="navigation" aria-label="navigation">
+    
+    <div class="wm-article-nav pull-right">
+      <a href="../practice_3/" class="btn btn-xs btn-default pull-right">
+        Next
+        <i class="fa fa-chevron-right" aria-hidden="true"></i>
+      </a>
+      <a href="../practice_3/" class="btn btn-xs btn-link">
+        Практическое задание 3
+      </a>
+    </div>
+    
+    <div class="wm-article-nav">
+      <a href="../practice_1/" class="btn btn-xs btn-default pull-left">
+        <i class="fa fa-chevron-left" aria-hidden="true"></i>
+        Previous</a><a href="../practice_1/" class="btn btn-xs btn-link">
+        Практическое задание 1
+      </a>
+    </div>
+    
+  </div>
+
+    
+
+    <h1 id="12-sqlmodel-alembic">Практика 1.2. Настройка БД, SQLModel и миграции через Alembic</h1>
+<p>В ходе практики была подключена база данных PostgreSQL, изменены и дополнены модели для работы с БД, добавлены новые эндпоинты.</p>
+<h2 id="connectionpy">connection.py</h2>
+<pre><code class="language-python">from sqlmodel import SQLModel, Session, create_engine
+
+db_url = 'postgresql://postgres:123@localhost/warriors_db'
+engine = create_engine(db_url, echo=True)
+
+
+def init_db():
+    SQLModel.metadata.create_all(engine)
+
+
+def get_session():
+    with Session(engine) as session:
+        yield session
+</code></pre>
+<h2 id="mainpy">main.py</h2>
+<pre><code class="language-python">from fastapi import FastAPI
+
+from typing import List
+from typing_extensions import TypedDict
+
+from models import Warrior, WarriorDefault, Profession, ProfessionDefault, WarriorProfessions, Skill, SkillDefault, WarriorFull, SkillWarriorLink
+
+from connection import init_db, get_session
+
+from fastapi import Depends, HTTPException
+from sqlmodel import select
+
+app = FastAPI()
+
+@app.on_event(&quot;startup&quot;)
+def on_startup():
+    init_db()
+
+@app.post(&quot;/warrior&quot;)
+def warriors_create(warrior: WarriorDefault, session=Depends(get_session)) -&gt; TypedDict('Response', {&quot;status&quot;: int,
+                                                                                                     &quot;data&quot;: Warrior}):
+    warrior = Warrior.model_validate(warrior)
+    session.add(warrior)
+    session.commit()
+    session.refresh(warrior)
+    return {&quot;status&quot;: 200, &quot;data&quot;: warrior}
+
+@app.get(&quot;/warriors_list&quot;)
+def warriors_list(session=Depends(get_session)) -&gt; List[Warrior]:
+    return session.exec(select(Warrior)).all()
+
+@app.patch(&quot;/warrior{warrior_id}&quot;)
+def warrior_update(warrior_id: int, warrior: WarriorDefault, session=Depends(get_session)) -&gt; WarriorDefault:
+    db_warrior = session.get(Warrior, warrior_id)
+    if not db_warrior:
+        raise HTTPException(status_code=404, detail=&quot;Warrior not found&quot;)
+    warrior_data = warrior.model_dump(exclude_unset=True)
+    for key, value in warrior_data.items():
+        setattr(db_warrior, key, value)
+    session.add(db_warrior)
+    session.commit()
+    session.refresh(db_warrior)
+    return db_warrior
+
+@app.delete(&quot;/warrior/delete{warrior_id}&quot;)
+def warrior_delete(warrior_id: int, session=Depends(get_session)):
+    warrior = session.get(Warrior, warrior_id)
+    if not warrior:
+        raise HTTPException(status_code=404, detail=&quot;Warrior not found&quot;)
+    session.delete(warrior)
+    session.commit()
+    return {&quot;ok&quot;: True}
+
+@app.get(&quot;/professions_list&quot;)
+def professions_list(session=Depends(get_session)) -&gt; List[Profession]:
+    return session.exec(select(Profession)).all()
+
+
+@app.get(&quot;/profession/{profession_id}&quot;)
+def profession_get(profession_id: int, session=Depends(get_session)) -&gt; Profession:
+    return session.get(Profession, profession_id)
+
+
+@app.post(&quot;/profession&quot;)
+def profession_create(prof: ProfessionDefault, session=Depends(get_session)) -&gt; TypedDict('Response', {&quot;status&quot;: int,
+                                                                                                     &quot;data&quot;: Profession}):
+    prof = Profession.model_validate(prof)
+    session.add(prof)
+    session.commit()
+    session.refresh(prof)
+    return {&quot;status&quot;: 200, &quot;data&quot;: prof}
+
+@app.get(&quot;/skills_list&quot;)
+def skills_list(session = Depends(get_session)) -&gt; List[Skill]:
+    return session.exec(select(Skill)).all()
+
+@app.get(&quot;/skill/{skill_id}&quot;)
+def skill_get(skill_id: int, session = Depends(get_session)) -&gt; Skill:
+    return session.get(Skill, skill_id)
+
+@app.post(&quot;/skill&quot;)
+def skill_create(skill: SkillDefault, session = Depends(get_session)) -&gt; TypedDict('Response', {&quot;status&quot;: int, &quot;data&quot;: Skill}):
+    db_skill = Skill.model_validate(skill)
+    session.add(db_skill)
+    session.commit()
+    session.refresh(db_skill)
+    return {&quot;status&quot;: 200, &quot;data&quot;: db_skill}
+
+@app.get(&quot;/warrior/{warrior_id}&quot;, response_model=WarriorFull)
+def warrior_get(warrior_id: int, session = Depends(get_session)) -&gt; Warrior:
+    warrior = session.get(Warrior, warrior_id)
+    if not warrior:
+        raise HTTPException(status_code=404, detail=&quot;Warrior not found&quot;)
+    return warrior
+
+@app.post(&quot;/warrior/{warrior_id}/skills/{skill_id}&quot;, status_code=201)
+def assign_skill_to_warrior(
+    warrior_id: int,
+    skill_id: int,
+    session = Depends(get_session)
+):
+    warrior = session.get(Warrior, warrior_id)
+    skill = session.get(Skill, skill_id)
+
+    if not warrior or not skill:
+        raise HTTPException(status_code=404, detail=&quot;Warrior or Skill not found&quot;)
+
+    existing_link = session.exec(
+        select(SkillWarriorLink).where(
+            SkillWarriorLink.warrior_id == warrior_id,
+            SkillWarriorLink.skill_id == skill_id
+        )
+    ).first()
+
+    if existing_link:
+        raise HTTPException(status_code=400, detail=&quot;Skill already assigned to this warrior&quot;)
+
+    link = SkillWarriorLink(warrior_id=warrior_id, skill_id=skill_id)
+    session.add(link)
+    session.commit()
+
+    return {&quot;status&quot;: &quot;ok&quot;, &quot;message&quot;: f&quot;Skill {skill_id} assigned to warrior {warrior_id}&quot;}
+</code></pre>
+<h2 id="modelspy">models.py</h2>
+<pre><code class="language-python">from enum import Enum
+from typing import Optional, List
+from sqlmodel import SQLModel, Field, Relationship
+
+
+class RaceType(Enum):
+    director = &quot;director&quot;
+    worker = &quot;worker&quot;
+    junior = &quot;junior&quot;
+
+
+class SkillWarriorLink(SQLModel, table=True):
+    warrior_id: int = Field(foreign_key=&quot;warrior.id&quot;, primary_key=True)
+    skill_id: int = Field(foreign_key=&quot;skill.id&quot;, primary_key=True)
+
+
+class ProfessionDefault(SQLModel):
+    title: str
+    description: Optional[str] = None
+
+class Profession(ProfessionDefault, table=True):
+    id: int = Field(default=None, primary_key=True)
+    warriors_prof: List[&quot;Warrior&quot;] = Relationship(back_populates=&quot;profession&quot;)
+
+
+class SkillDefault(SQLModel):
+    name: str
+    description: Optional[str] = None
+
+class Skill(SkillDefault, table=True):
+    id: int = Field(default=None, primary_key=True)
+    name: str
+    description: Optional[str] = None
+    warriors: List[&quot;Warrior&quot;] = Relationship(
+        back_populates=&quot;skills&quot;, 
+        link_model=SkillWarriorLink
+    )
+
+
+class WarriorDefault(SQLModel):
+    race: RaceType
+    name: str
+    level: int
+    profession_id: Optional[int] = Field(default=None, foreign_key=&quot;profession.id&quot;)
+
+class Warrior(WarriorDefault, table=True):
+    id: int = Field(default=None, primary_key=True)
+    profession: Optional[Profession] = Relationship(back_populates=&quot;warriors_prof&quot;)
+    skills: List[Skill] = Relationship(
+        back_populates=&quot;warriors&quot;, 
+        link_model=SkillWarriorLink
+    )
+
+
+class WarriorProfessions(WarriorDefault):
+    id: Optional[int] = None
+    profession: Optional[Profession] = None
+
+class WarriorSkills(WarriorDefault):
+    id: Optional[int] = None
+    skills: List[Skill] = []
+
+class WarriorFull(WarriorDefault):
+    id: Optional[int] = None
+    profession: Optional[Profession] = None
+    skills: List[Skill] = []
+</code></pre>
+
+  <br>
+    
+
+    
+    
+      
+    
+
+  <div class="row wm-article-nav-buttons" role="navigation" aria-label="navigation">
+    
+    <div class="wm-article-nav pull-right">
+      <a href="../practice_3/" class="btn btn-xs btn-default pull-right">
+        Next
+        <i class="fa fa-chevron-right" aria-hidden="true"></i>
+      </a>
+      <a href="../practice_3/" class="btn btn-xs btn-link">
+        Практическое задание 3
+      </a>
+    </div>
+    
+    <div class="wm-article-nav">
+      <a href="../practice_1/" class="btn btn-xs btn-default pull-left">
+        <i class="fa fa-chevron-left" aria-hidden="true"></i>
+        Previous</a><a href="../practice_1/" class="btn btn-xs btn-link">
+        Практическое задание 1
+      </a>
+    </div>
+    
+  </div>
+
+    <br>
+</div>
+
+<footer class="container-fluid wm-page-content">
+  <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a> using <a href="https://github.com/gristlabs/mkdocs-windmill">Windmill</a> theme by Grist Labs.</p>
+</footer>
+
+</body>
+</html>

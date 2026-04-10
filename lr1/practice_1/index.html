@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+  
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    
+    
+    <link rel="shortcut icon" href="../../img/favicon.ico">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+    <title>Практическое задание 1 - Отчеты по лабораторным работам. Генне Константин, K3340</title>
+    <link href="../../css/bootstrap-3.3.7.min.css" rel="stylesheet">
+    <link href="../../css/font-awesome-4.7.0.css" rel="stylesheet">
+    <link href="../../css/base.css" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/highlight.css">
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+    <![endif]-->
+
+    <script src="../../js/jquery-3.2.1.min.js"></script>
+    <script src="../../js/bootstrap-3.3.7.min.js"></script>
+    <script src="../../js/highlight.pack.js"></script>
+    
+    <base target="_top">
+    <script>
+      var base_url = '../..';
+      var is_top_frame = false;
+        
+        var pageToc = [
+          {title: "\u041f\u0440\u0430\u043a\u0442\u0438\u043a\u0430 1.1. \u0421\u043e\u0437\u0434\u0430\u043d\u0438\u0435 \u0431\u0430\u0437\u043e\u0432\u043e\u0433\u043e \u043f\u0440\u0438\u043b\u043e\u0436\u0435\u043d\u0438\u044f \u043d\u0430 FastAPI", url: "#_top", children: [
+              {title: "main.py", url: "#mainpy" },
+              {title: "models.py", url: "#modelspy" },
+          ]},
+        ];
+
+    </script>
+    <script src="../../js/base.js"></script> 
+</head>
+
+<body>
+<script>
+if (is_top_frame) { $('body').addClass('wm-top-page'); }
+</script>
+
+
+
+<div class="container-fluid wm-page-content">
+  <a name="_top"></a>
+    
+
+    
+    
+      
+    
+
+  <div class="row wm-article-nav-buttons" role="navigation" aria-label="navigation">
+    
+    <div class="wm-article-nav pull-right">
+      <a href="../practice_2/" class="btn btn-xs btn-default pull-right">
+        Next
+        <i class="fa fa-chevron-right" aria-hidden="true"></i>
+      </a>
+      <a href="../practice_2/" class="btn btn-xs btn-link">
+        Практическое задание 2
+      </a>
+    </div>
+    
+    <div class="wm-article-nav">
+      <a href="../.." class="btn btn-xs btn-default pull-left">
+        <i class="fa fa-chevron-left" aria-hidden="true"></i>
+        Previous</a><a href="../.." class="btn btn-xs btn-link">
+        Главная
+      </a>
+    </div>
+    
+  </div>
+
+    
+
+    <h1 id="11-fastapi">Практика 1.1. Создание базового приложения на FastAPI</h1>
+<p>В ходе практики была реализована виртуальная база данных, методы, описанные в практике, созданы модели и API для профессий.</p>
+<h2 id="mainpy">main.py</h2>
+<pre><code class="language-python">from fastapi import FastAPI
+
+from typing import List
+from typing_extensions import TypedDict
+
+from models import Warrior, Profession, ProfessionCreate, ProfessionUpdate
+
+app = FastAPI()
+
+temp_bd = [
+{
+    &quot;id&quot;: 1,
+    &quot;race&quot;: &quot;director&quot;,
+    &quot;name&quot;: &quot;Мартынов Дмитрий&quot;,
+    &quot;level&quot;: 12,
+    &quot;profession&quot;: {
+        &quot;id&quot;: 1,
+        &quot;title&quot;: &quot;Влиятельный человек&quot;,
+        &quot;description&quot;: &quot;Эксперт по всем вопросам&quot;
+    },
+    &quot;skills&quot;:
+        [{
+            &quot;id&quot;: 1,
+            &quot;name&quot;: &quot;Купле-продажа компрессоров&quot;,
+            &quot;description&quot;: &quot;&quot;
+
+        },
+        {
+            &quot;id&quot;: 2,
+            &quot;name&quot;: &quot;Оценка имущества&quot;,
+            &quot;description&quot;: &quot;&quot;
+
+        }]
+},
+{
+    &quot;id&quot;: 2,
+    &quot;race&quot;: &quot;worker&quot;,
+    &quot;name&quot;: &quot;Андрей Косякин&quot;,
+    &quot;level&quot;: 12,
+    &quot;profession&quot;: {
+        &quot;id&quot;: 1,
+        &quot;title&quot;: &quot;Дельфист-гребец&quot;,
+        &quot;description&quot;: &quot;Уважаемый сотрудник&quot;
+    },
+    &quot;skills&quot;: []
+},
+]
+
+temp_professions = [
+    {&quot;id&quot;: 1, &quot;title&quot;: &quot;Влиятельный человек&quot;, &quot;description&quot;: &quot;Эксперт по всем вопросам&quot;},
+    {&quot;id&quot;: 2, &quot;title&quot;: &quot;Дельфист-гребец&quot;, &quot;description&quot;: &quot;Уважаемый сотрудник&quot;}
+]
+
+@app.get('/')
+def hello():
+    return &quot;Hello, [username]!&quot;
+
+@app.get(&quot;/warriors_list&quot;)
+def warriors_list() -&gt; List[Warrior]:
+    return temp_bd
+
+
+@app.get(&quot;/warrior/{warrior_id}&quot;)
+def warriors_get(warrior_id: int) -&gt; List[Warrior]:
+    return [warrior for warrior in temp_bd if warrior.get(&quot;id&quot;) == warrior_id]
+
+
+@app.post(&quot;/warrior&quot;)
+def warriors_create(warrior: Warrior) -&gt; TypedDict('Response', {&quot;status&quot;: int, &quot;data&quot;: Warrior}):
+    warrior_to_append = warrior.model_dump()
+    temp_bd.append(warrior_to_append)
+    return {&quot;status&quot;: 200, &quot;data&quot;: warrior}
+
+
+@app.delete(&quot;/warrior/delete{warrior_id}&quot;)
+def warrior_delete(warrior_id: int):
+    for i, warrior in enumerate(temp_bd):
+        if warrior.get(&quot;id&quot;) == warrior_id:
+            temp_bd.pop(i)
+            break
+    return {&quot;status&quot;: 201, &quot;message&quot;: &quot;deleted&quot;}
+
+
+@app.put(&quot;/warrior{warrior_id}&quot;)
+def warrior_update(warrior_id: int, warrior: Warrior) -&gt; List[Warrior]:
+    for war in temp_bd:
+        if war.get(&quot;id&quot;) == warrior_id:
+            warrior_to_append = warrior.model_dump()
+            temp_bd.remove(war)
+            temp_bd.append(warrior_to_append)
+    return temp_bd
+
+
+@app.get(&quot;/profession_list&quot;)
+def get_professions() -&gt; List[Profession]:
+    return temp_professions
+
+@app.get(&quot;/profession/{profession_id}&quot;)
+def get_profession(profession_id: int) -&gt; List[Profession]:
+    return [profession for profession in temp_professions if profession.get(&quot;id&quot;) == profession_id]
+
+@app.post(&quot;/profession&quot;)
+def create_profession(profession: ProfessionCreate) -&gt; TypedDict('Response', {&quot;status&quot;: int, &quot;data&quot;: Warrior}):
+    new_id = max((p[&quot;id&quot;] for p in temp_professions), default=0) + 1
+    new_prof = {&quot;id&quot;: new_id, **profession.model_dump()}
+    temp_professions.append(new_prof)
+    return {&quot;status&quot;: 200, &quot;data&quot;: new_prof}
+
+@app.patch(&quot;/profession/{profession_id}&quot;)
+def update_profession(profession_id: int, profession_update: ProfessionUpdate) -&gt; Profession:
+    for p in temp_professions:
+        if p[&quot;id&quot;] == profession_id:
+            if profession_update.title is not None:
+                p[&quot;title&quot;] = profession_update.title
+            if profession_update.description is not None:
+                p[&quot;description&quot;] = profession_update.description
+            return p
+
+@app.delete(&quot;/profession/{profession_id}&quot;)
+def delete_profession(profession_id: int):
+    for i, p in enumerate(temp_professions):
+        if p[&quot;id&quot;] == profession_id:
+            temp_professions.pop(i)
+            return {&quot;status&quot;: 201, &quot;message&quot;: &quot;deleted&quot;}
+</code></pre>
+<h2 id="modelspy">models.py</h2>
+<pre><code class="language-python">from enum import Enum
+from typing import Optional, List
+
+from pydantic import BaseModel
+
+class RaceType(Enum):
+    director = &quot;director&quot;
+    worker = &quot;worker&quot;
+    junior = &quot;junior&quot;
+
+class Profession(BaseModel):
+    id: int
+    title: str
+    description: str
+
+class Skill(BaseModel):
+    id: int
+    name: str
+    description: str
+
+class Warrior(BaseModel):
+    id: int
+    race: RaceType
+    name: str
+    level: int
+    profession: Profession
+    skills: Optional[List[Skill]] = []
+
+class ProfessionCreate(BaseModel):
+    title: str
+    description: str
+
+class ProfessionUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+</code></pre>
+
+  <br>
+    
+
+    
+    
+      
+    
+
+  <div class="row wm-article-nav-buttons" role="navigation" aria-label="navigation">
+    
+    <div class="wm-article-nav pull-right">
+      <a href="../practice_2/" class="btn btn-xs btn-default pull-right">
+        Next
+        <i class="fa fa-chevron-right" aria-hidden="true"></i>
+      </a>
+      <a href="../practice_2/" class="btn btn-xs btn-link">
+        Практическое задание 2
+      </a>
+    </div>
+    
+    <div class="wm-article-nav">
+      <a href="../.." class="btn btn-xs btn-default pull-left">
+        <i class="fa fa-chevron-left" aria-hidden="true"></i>
+        Previous</a><a href="../.." class="btn btn-xs btn-link">
+        Главная
+      </a>
+    </div>
+    
+  </div>
+
+    <br>
+</div>
+
+<footer class="container-fluid wm-page-content">
+  <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a> using <a href="https://github.com/gristlabs/mkdocs-windmill">Windmill</a> theme by Grist Labs.</p>
+</footer>
+
+</body>
+</html>
