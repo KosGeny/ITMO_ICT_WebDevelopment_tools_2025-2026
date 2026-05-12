@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+  
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    
+    
+    <link rel="shortcut icon" href="../../img/favicon.ico">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+    <title>Лабораторная работа №2 - Отчеты по лабораторным работам. Генне Константин, K3340</title>
+    <link href="../../css/bootstrap-3.3.7.min.css" rel="stylesheet">
+    <link href="../../css/font-awesome-4.7.0.css" rel="stylesheet">
+    <link href="../../css/base.css" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/highlight.css">
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+    <![endif]-->
+
+    <script src="../../js/jquery-3.2.1.min.js"></script>
+    <script src="../../js/bootstrap-3.3.7.min.js"></script>
+    <script src="../../js/highlight.pack.js"></script>
+    
+    <base target="_top">
+    <script>
+      var base_url = '../..';
+      var is_top_frame = false;
+        
+        var pageToc = [
+          {title: "\u041e\u0442\u0447\u0451\u0442 \u043f\u043e \u043b\u0430\u0431\u043e\u0440\u0430\u0442\u043e\u0440\u043d\u043e\u0439 \u0440\u0430\u0431\u043e\u0442\u0435 \u21162. \u041f\u043e\u0442\u043e\u043a\u0438. \u041f\u0440\u043e\u0446\u0435\u0441\u0441\u044b. \u0410\u0441\u0438\u043d\u0445\u0440\u043e\u043d\u043d\u043e\u0441\u0442\u044c.", url: "#_top", children: [
+              {title: "\u0417\u0430\u0434\u0430\u0447\u0430 1: \u0420\u0430\u0437\u043b\u0438\u0447\u0438\u044f \u043c\u0435\u0436\u0434\u0443 threading, multiprocessing \u0438 async \u0432 Python", url: "#1-threading-multiprocessing-async-python" },
+              {title: "\u0417\u0430\u0434\u0430\u0447\u0430 2: \u041f\u0430\u0440\u0430\u043b\u043b\u0435\u043b\u044c\u043d\u044b\u0439 \u043f\u0430\u0440\u0441\u0438\u043d\u0433 \u0432\u0435\u0431-\u0441\u0442\u0440\u0430\u043d\u0438\u0446 \u0441 \u0441\u043e\u0445\u0440\u0430\u043d\u0435\u043d\u0438\u0435\u043c \u0432 \u0411\u0414", url: "#2-" },
+              {title: "\u0412\u044b\u0432\u043e\u0434\u044b", url: "#_7" },
+          ]},
+        ];
+
+    </script>
+    <script src="../../js/base.js"></script> 
+</head>
+
+<body>
+<script>
+if (is_top_frame) { $('body').addClass('wm-top-page'); }
+</script>
+
+
+
+<div class="container-fluid wm-page-content">
+  <a name="_top"></a>
+    
+
+    
+    
+      
+    
+
+  <div class="row wm-article-nav-buttons" role="navigation" aria-label="navigation">
+    
+    <div class="wm-article-nav">
+      <a href="../../lr1/lr1/" class="btn btn-xs btn-default pull-left">
+        <i class="fa fa-chevron-left" aria-hidden="true"></i>
+        Previous</a><a href="../../lr1/lr1/" class="btn btn-xs btn-link">
+        Лабораторная работа
+      </a>
+    </div>
+    
+  </div>
+
+    
+
+    <h1 id="no2">Отчёт по лабораторной работе №2. Потоки. Процессы. Асинхронность.</h1>
+<h2 id="1-threading-multiprocessing-async-python">Задача 1: Различия между threading, multiprocessing и async в Python</h2>
+<h3 id="_1">Постановка задачи</h3>
+<p>Напишите три различных программы на Python, использующие каждый из подходов: threading, multiprocessing и async. Каждая программа должна решать считать сумму всех чисел от 1 до 10000000000. Разделите вычисления на несколько параллельных задач для ускорения выполнения.  </p>
+<h3 id="_2">Математическая проверка</h3>
+<p>Данная последовательность образует арифметическую прогрессию, поэтому результат подсчёта можно проверить математически. 
+<code>S = N × (N + 1) / 2 = 10¹⁰ × (10¹⁰ + 1) / 2 = 50 000 000 005 000 000 000</code></p>
+<h3 id="_3">Общие параметры</h3>
+<pre><code class="language-python">N = 10_000_000_000  # Верхняя граница суммы
+WORKERS_NUM = os.cpu_count()  # 16 потоков/процессов
+CHUNK_SIZE = N // WORKERS_NUM  # Размер блока для каждого worker
+EXPECTED_SUM = N * (N + 1) // 2 # Математически подсчитанная сумма для проверки
+</code></pre>
+<h3 id="21-threading">2.1. Реализация на threading</h3>
+<pre><code class="language-python">def calculate_sum(start, end, results, index):
+    part_sum = 0
+    for i in range(start, end + 1):
+        part_sum += i
+    results[index] = part_sum
+
+def main():
+    ranges = []
+    for i in range(WORKERS_NUM):
+        start = i * CHUNK_SIZE + 1
+        end = (i + 1) * CHUNK_SIZE if i &lt; WORKERS_NUM - 1 else N
+        ranges.append((start, end))
+
+    threads = []
+    results = [0] * WORKERS_NUM
+
+    start_t = time.perf_counter()
+
+    for i, (start, end) in enumerate(ranges):
+        t = threading.Thread(
+            target=calculate_sum,
+            args=(start, end, results, i)
+        )
+        threads.append(t)
+        t.start()
+
+    for t in threads:
+        t.join()
+
+    total_sum = sum(results)
+    elapsed_t = time.perf_counter() - start_t
+
+    print(&quot;Сумма чисел с использованием THREADING\n&quot;)
+    print(f&quot;Количество workers: {WORKERS_NUM}&quot;)
+    print(f&quot;Ожидаемая сумма: {EXPECTED_SUM}&quot;)
+    print(f&quot;Полученная сумма: {total_sum}&quot;)
+    print(f&quot;Затраченное время: {elapsed_t:.6f} сек&quot;)
+
+if __name__ == &quot;__main__&quot;:
+    main()
+</code></pre>
+<p>Каждый поток выполняет чистый Python-цикл, GIL разрешает работать только одному потоку одновременно, поэтому параллельного ускорения нет. Общее время почти равно последовательному выполнению.</p>
+<p><img alt="Результат работы threading" src="../images/1_threading.jpg" /></p>
+<h3 id="22-multiprocessing">2.2. Реализация на multiprocessing</h3>
+<pre><code class="language-python">def calculate_sum(start, end):
+    part_sum = 0
+    for i in range(start, end+1):
+        part_sum += i
+    return part_sum
+
+def main():
+    ranges = []
+    for i in range(WORKERS_NUM):
+        start = i * CHUNK_SIZE + 1
+        end = (i + 1) * CHUNK_SIZE if i &lt; WORKERS_NUM - 1 else N
+        ranges.append((start, end))
+
+    start_t = time.perf_counter()
+
+    with multiprocessing.Pool(processes=WORKERS_NUM) as pool:
+        sums = pool.starmap(calculate_sum, ranges)
+
+    total_sum = sum(sums)
+
+    elapsed_t = time.perf_counter() - start_t
+
+    print(&quot;Сумма чисел с использованием MULTIPROCESSING\n&quot;)
+    print(f&quot;Количество workers: {WORKERS_NUM}&quot;)
+    print(f&quot;Ожидаемая сумма: {EXPECTED_SUM}&quot;)
+    print(f&quot;Полученная сумма: {total_sum}&quot;)
+    print(f&quot;Затраченное время: {elapsed_t} сек&quot;)
+
+if __name__ == &quot;__main__&quot;:
+    main()
+</code></pre>
+<p>Каждое подвыражение вычисляется в отдельном процессе, имеющем собственный GIL, поэтому все ядра CPU загружены работой. Накладные расходы на создание процессов окупаются многократным ускорением вычислений.</p>
+<p><img alt="Результат работы multiprocessing" src="../images/1_multiprocessing.jpg" /></p>
+<h3 id="23-asyncio">2.3. Реализация на asyncio</h3>
+<pre><code class="language-python">def calculate_sum(start, end):
+    part_sum = 0
+    for i in range(start, end+1):
+        part_sum += i
+    return part_sum
+
+async def main():
+    tasks = [asyncio.to_thread(calculate_sum,
+                               i * CHUNK_SIZE + 1,
+                               (i + 1) * CHUNK_SIZE if i &lt; WORKERS_NUM - 1 else N
+                               )
+                               for i in range(WORKERS_NUM)]
+
+    start_t = time.perf_counter()
+    sums = await asyncio.gather(*tasks)
+    total_sum = sum(sums)
+    elapsed_t = time.perf_counter() - start_t
+
+    print(&quot;Сумма чисел с использованием ASYNC\n&quot;)
+    print(f&quot;Количество workers: {WORKERS_NUM}&quot;)
+    print(f&quot;Ожидаемая сумма: {EXPECTED_SUM}&quot;)
+    print(f&quot;Полученная сумма: {total_sum}&quot;)
+    print(f&quot;Затраченное время: {elapsed_t}&quot;)
+
+if __name__ == &quot;__main__&quot;:
+    asyncio.run(main())
+</code></pre>
+<p>В async-варианте я обернул синхронный счёт в asyncio.to_thread и собрал результаты через asyncio.gather. По сути это снова потоки, поэтому для CPU-bound нагрузки время близко к threading-версии и заметно медленнее multiprocessing.</p>
+<p><img alt="Результат работы asyncio" src="../images/1_async.jpg" /></p>
+<h3 id="24">2.4. Результаты и сравнение</h3>
+<table>
+<thead>
+<tr>
+<th>Подход</th>
+<th>Время выполнения (сек)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Threading</strong></td>
+<td>1090,22</td>
+</tr>
+<tr>
+<td><strong>Asyncio</strong></td>
+<td>1175,74</td>
+</tr>
+<tr>
+<td><strong>Multiprocessing</strong></td>
+<td>119,53</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_4">Анализ результатов</h3>
+<ul>
+<li>
+<p>Multiprocessing показал почти 10-кратное ускорение относительно других вариантов благодаря реальной возможности параллельно выполнять Python-код на разных ядрах процессора.</p>
+</li>
+<li>
+<p>Threading и Async выполнились практически за одно и то же время. Оба подхода страдают от GIL, а async дополнительно тратит время на переключение контекста event loop.</p>
+</li>
+<li>
+<p>Для CPU-bound-задач multiprocessing является единственным эффективным решением.</p>
+</li>
+</ul>
+<hr />
+<h2 id="2-">Задача 2: Параллельный парсинг веб-страниц с сохранением в БД</h2>
+<h3 id="_5">Постановка задачи</h3>
+<p>Напишите программу на Python для параллельного парсинга нескольких веб-страниц с сохранением данных в базу данных с использованием подходов threading, multiprocessing и async. Каждая программа должна парсить информацию с нескольких веб-сайтов, сохранять их в базу данных.</p>
+<p><strong>Тестируемые URL:</strong></p>
+<pre><code class="language-python">urls = [
+    &quot;https://github.com/psf/requests/issues&quot;,
+    &quot;https://github.com/tiangolo/fastapi/issues&quot;, 
+    &quot;https://github.com/tiangolo/sqlmodel/issues&quot;,
+    &quot;https://github.com/langchain-ai/langchain/issues&quot;,
+    &quot;https://github.com/pytorch/pytorch/issues&quot;,
+    &quot;https://github.com/Kludex/uvicorn/issues&quot;,
+]
+</code></pre>
+<p>Для каждого URL необходимо:</p>
+<ol>
+<li>Загрузить HTML.</li>
+<li>Распарсить заголовок страницы и список Issues.</li>
+<li>Сохранить workspace и задачи в соответствующие таблицы PostgreSQL (модели Workspace, Task, Tag, TaskTag).</li>
+</ol>
+<p>Выполнение разбивается на равные части по числу параллельных исполнителей.  </p>
+<p>Используемая БД: PostgreSQL, взаимодействие через SQLAlchemy/SQLModel, синхронный драйвер psycopg2 (для threading и multiprocessing) и асинхронный asyncpg (для async). Для HTTP-запросов в потоках/процессах — requests, в async — aiohttp.</p>
+<h3 id="32">3.2. Реализация подходов</h3>
+<h4 id="asyncio">Asyncio</h4>
+<pre><code class="language-python">import os
+import asyncio
+import time
+from urllib.parse import urlparse, urljoin
+
+import aiohttp
+from bs4 import BeautifulSoup
+from dotenv import load_dotenv
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+from sqlmodel import select
+
+from models import Workspace, Tag, Task, TaskTag, TaskStatus, TaskPriority
+
+load_dotenv()
+
+DATABASE_URL_ASYNC = os.getenv(&quot;DATABASE_URL&quot;)
+DEFAULT_USER_ID = 1
+
+
+def extract_owner_repo_from_url(url):
+    parsed = urlparse(url)
+    path_parts = [p for p in parsed.path.split(&quot;/&quot;) if p]
+    return path_parts[0], path_parts[1]
+
+
+def parse_issues_from_page(html):
+    soup = BeautifulSoup(html, &quot;html.parser&quot;)
+    tasks = []
+    seen_urls = set()
+
+    title_links = soup.find_all(&quot;a&quot;, attrs={&quot;data-testid&quot;: &quot;issue-pr-title-link&quot;})
+    for link in title_links:
+        issue_url = link.get(&quot;href&quot;, &quot;&quot;)
+        if not issue_url:
+            continue
+        if issue_url.startswith(&quot;/&quot;):
+            issue_url = urljoin(&quot;https://github.com&quot;, issue_url)
+        if issue_url in seen_urls:
+            continue
+        seen_urls.add(issue_url)
+
+        title = link.get_text(strip=True)
+        if not title or len(title) &lt; 3:
+            continue
+
+        labels = []
+        issue_li = link.find_parent(&quot;li&quot;)
+        if issue_li:
+            for badge in issue_li.find_all(&quot;div&quot;, class_=lambda c: c and &quot;TrailingBadge&quot; in c):
+                lbl_span = badge.find(&quot;span&quot;, class_=lambda c: c and &quot;prc-Text-Text-&quot; in c)
+                if lbl_span:
+                    label_text = lbl_span.get_text(strip=True)
+                    if label_text:
+                        labels.append(label_text)
+
+        tasks.append({&quot;title&quot;: title, &quot;url&quot;: issue_url, &quot;labels&quot;: labels})
+    return tasks
+
+
+async def get_or_create_workspace(db, full_name, description, owner_id):
+    result = await db.execute(select(Workspace).where(Workspace.name == full_name))
+    workspace = result.scalar_one_or_none()
+    if not workspace:
+        workspace = Workspace(name=full_name, description=description, owner_id=owner_id)
+        db.add(workspace)
+        await db.flush()
+    return workspace
+
+
+async def task_exists(db: AsyncSession, title: str, workspace_id: int) -&gt; bool:
+    result = await db.execute(
+        select(Task).where(Task.title == title, Task.workspace_id == workspace_id)
+    )
+    return result.first() is not None
+
+
+async def parse_and_save(engine, session_factory, http_session, issues_url, owner_id):
+    owner, repo = extract_owner_repo_from_url(issues_url)
+    full_name = f&quot;{owner}/{repo}&quot;
+
+    headers = {&quot;User-Agent&quot;: &quot;Lab-Parser/1.0&quot;}
+    async with http_session.get(issues_url, headers=headers) as resp:
+        resp.raise_for_status()
+        html = await resp.text()
+
+    soup = BeautifulSoup(html, &quot;html.parser&quot;)
+    title_tag = soup.find(&quot;title&quot;)
+    page_title = title_tag.get_text(strip=True) if title_tag else None
+    description = f&quot;{page_title} | {issues_url}&quot; if page_title else issues_url
+
+    print(f&quot;Заголовок страницы Issues {full_name}: {page_title}&quot;)
+
+    issues = parse_issues_from_page(html)
+
+    async with session_factory() as db:
+        workspace = await get_or_create_workspace(db, full_name, description, owner_id)
+
+        for issue in issues:
+            if await task_exists(db, issue[&quot;title&quot;], workspace.id):
+                continue
+
+            task = Task(
+                title=issue[&quot;title&quot;][:300],
+                description=issue[&quot;url&quot;],
+                status=TaskStatus.todo,
+                priority=TaskPriority.medium,
+                owner_id=owner_id,
+                workspace_id=workspace.id,
+            )
+            db.add(task)
+            await db.flush()
+
+            seen_labels = set()
+            for label_name in issue[&quot;labels&quot;]:
+                label_name = label_name.strip()
+                if not label_name or label_name in seen_labels:
+                    continue
+                seen_labels.add(label_name)
+
+                result = await db.execute(
+                    select(Tag).where(Tag.name == label_name, Tag.owner_id == owner_id)
+                )
+                tag = result.scalars().first()
+                if not tag:
+                    tag = Tag(name=label_name, owner_id=owner_id)
+                    db.add(tag)
+                    await db.flush()
+
+                task_tag = TaskTag(task_id=task.id, tag_id=tag.id, is_primary=False)
+                db.add(task_tag)
+
+        await db.commit()
+
+
+async def limited_parse(semaphore, *args, **kwargs):
+    async with semaphore:
+        await parse_and_save(*args, **kwargs)
+
+
+async def main():
+    urls = [
+        &quot;https://github.com/psf/requests/issues&quot;,
+        &quot;https://github.com/tiangolo/fastapi/issues&quot;,
+        &quot;https://github.com/tiangolo/sqlmodel/issues&quot;,
+        &quot;https://github.com/langchain-ai/langchain/issues&quot;,
+        &quot;https://github.com/pytorch/pytorch/issues&quot;,
+        &quot;https://github.com/Kludex/uvicorn/issues&quot;,
+    ]
+
+    engine = create_async_engine(DATABASE_URL_ASYNC, echo=False, pool_size=5)
+    session_factory = async_sessionmaker(engine, expire_on_commit=False)
+
+    semaphore = asyncio.Semaphore(3)
+
+    async with aiohttp.ClientSession() as http_session:
+        tasks = [
+            limited_parse(semaphore, engine, session_factory, http_session, url, DEFAULT_USER_ID)
+            for url in urls
+        ]
+        start = time.time()
+        await asyncio.gather(*tasks)
+
+    await engine.dispose()
+    elapsed = time.time() - start
+    print(f&quot;\nAsyncio: выполнение завершено за {elapsed:.2f} сек&quot;)
+
+
+if __name__ == &quot;__main__&quot;:
+    asyncio.run(main())
+</code></pre>
+<ul>
+<li>
+<p>Единый event loop, общий aiohttp.ClientSession и асинхронный движок БД (create_async_engine).</p>
+</li>
+<li>
+<p>Для каждого URL создаётся корутина, заключённая в семафор, ограничивающий одновременные запросы для предотвращения блокировок со стороны GitHub.</p>
+</li>
+<li>
+<p>Все HTTP-запросы и операции БД неблокирующие.</p>
+</li>
+</ul>
+<p><img alt="Результат работы asyncio" src="../images/2_async.png" /></p>
+<h4 id="multiprocessing">Multiprocessing</h4>
+<pre><code class="language-python">import os
+import time
+import multiprocessing
+from urllib.parse import urlparse, urljoin
+
+import requests
+from bs4 import BeautifulSoup
+from dotenv import load_dotenv
+from sqlmodel import Session, create_engine, select
+
+from models import Workspace, Tag, Task, TaskTag, TaskStatus, TaskPriority
+
+load_dotenv()
+
+DATABASE_URL = os.getenv(&quot;DATABASE_URL&quot;, &quot;&quot;).replace(&quot;+asyncpg&quot;, &quot;+psycopg2&quot;)
+DEFAULT_USER_ID = 1
+
+
+def extract_owner_repo_from_url(url):
+    parsed = urlparse(url)
+    path_parts = [p for p in parsed.path.split(&quot;/&quot;) if p]
+    return path_parts[0], path_parts[1]
+
+
+def parse_issues_from_page(html):
+    soup = BeautifulSoup(html, &quot;html.parser&quot;)
+    tasks = []
+    seen_urls = set()
+
+    title_links = soup.find_all(&quot;a&quot;, attrs={&quot;data-testid&quot;: &quot;issue-pr-title-link&quot;})
+
+    for link in title_links:
+        issue_url = link.get(&quot;href&quot;, &quot;&quot;)
+        if not issue_url:
+            continue
+        if issue_url.startswith(&quot;/&quot;):
+            issue_url = urljoin(&quot;https://github.com&quot;, issue_url)
+        if issue_url in seen_urls:
+            continue
+        seen_urls.add(issue_url)
+
+        title = link.get_text(strip=True)
+        if not title or len(title) &lt; 3:
+            continue
+
+        labels = []
+        issue_li = link.find_parent(&quot;li&quot;)
+        if issue_li:
+            for badge in issue_li.find_all(&quot;div&quot;, class_=lambda c: c and &quot;TrailingBadge&quot; in c):
+                lbl_span = badge.find(&quot;span&quot;, class_=lambda c: c and &quot;prc-Text-Text-&quot; in c)
+                if lbl_span:
+                    label_text = lbl_span.get_text(strip=True)
+                    if label_text:
+                        labels.append(label_text)
+
+        tasks.append({
+            &quot;title&quot;: title,
+            &quot;url&quot;: issue_url,
+            &quot;labels&quot;: labels,
+        })
+
+    return tasks
+
+
+def get_or_create_workspace(db, full_name, description, owner_id):
+    workspace = db.execute(
+        select(Workspace).where(Workspace.name == full_name)
+    ).scalar_one_or_none()
+    if not workspace:
+        workspace = Workspace(name=full_name, description=description, owner_id=owner_id)
+        db.add(workspace)
+        db.flush()
+    return workspace
+
+
+def task_exists(db, title, workspace_id):
+    return db.execute(
+        select(Task).where(
+            Task.title == title,
+            Task.workspace_id == workspace_id
+        )
+    ).first() is not None
+
+
+def parse_and_save(engine, issues_url, owner_id):
+    owner, repo = extract_owner_repo_from_url(issues_url)
+    full_name = f&quot;{owner}/{repo}&quot;
+
+    headers = {&quot;User-Agent&quot;: &quot;Lab-Parser/1.0&quot;}
+    resp = requests.get(issues_url, headers=headers)
+    resp.raise_for_status()
+
+    soup = BeautifulSoup(resp.text, &quot;html.parser&quot;)
+    title_tag = soup.find(&quot;title&quot;)
+    page_title = title_tag.get_text(strip=True) if title_tag else None
+    description = f&quot;{page_title} | {issues_url}&quot; if page_title else issues_url
+
+    print(f&quot;Заголовок страницы Issues {full_name}: {page_title}&quot;)
+
+    issues = parse_issues_from_page(resp.text)
+
+    with Session(engine) as db:
+        workspace = get_or_create_workspace(db, full_name, description, owner_id)
+
+        for issue in issues:
+            if task_exists(db, issue[&quot;title&quot;], workspace.id):
+                continue
+
+            task = Task(
+                title=issue[&quot;title&quot;][:300],
+                description=issue[&quot;url&quot;],
+                status=TaskStatus.todo,
+                priority=TaskPriority.medium,
+                owner_id=owner_id,
+                workspace_id=workspace.id,
+            )
+            db.add(task)
+            db.flush()
+
+            seen_labels = set()
+            for label_name in issue[&quot;labels&quot;]:
+                label_name = label_name.strip()
+                if not label_name or label_name in seen_labels:
+                    continue
+                seen_labels.add(label_name)
+
+                tag = db.execute(
+                    select(Tag).where(Tag.name == label_name, Tag.owner_id == owner_id)
+                ).scalars().first()
+                if not tag:
+                    tag = Tag(name=label_name, owner_id=owner_id)
+                    db.add(tag)
+                    db.flush()
+
+                task_tag = TaskTag(task_id=task.id, tag_id=tag.id, is_primary=False)
+                db.add(task_tag)
+
+        db.commit()
+
+
+def process_target(urls, owner_id):
+    engine = create_engine(DATABASE_URL, echo=False)
+    try:
+        for url in urls:
+            parse_and_save(engine, url, owner_id)
+    finally:
+        engine.dispose()
+
+
+def main():
+    urls = [
+        &quot;https://github.com/psf/requests/issues&quot;,
+        &quot;https://github.com/tiangolo/fastapi/issues&quot;,
+        &quot;https://github.com/tiangolo/sqlmodel/issues&quot;,
+        &quot;https://github.com/langchain-ai/langchain/issues&quot;,
+        &quot;https://github.com/pytorch/pytorch/issues&quot;,
+        &quot;https://github.com/Kludex/uvicorn/issues&quot;,
+    ]
+
+    NUM_PROCS = 3
+    chunk_size = len(urls) // NUM_PROCS + (1 if len(urls) % NUM_PROCS else 0)
+    chunks = [urls[i:i + chunk_size] for i in range(0, len(urls), chunk_size)]
+
+    start = time.time()
+    processes = []
+    for chunk in chunks:
+        p = multiprocessing.Process(target=process_target, args=(chunk, DEFAULT_USER_ID))
+        processes.append(p)
+        p.start()
+
+    for p in processes:
+        p.join()
+    elapsed = time.time() - start
+    print(f&quot;\nMultiprocessing: выполнение завершено за {elapsed:.2f} сек&quot;)
+
+
+if __name__ == &quot;__main__&quot;:
+    main()
+</code></pre>
+<ul>
+<li>
+<p>Создаётся NUM_PROCS процессов.</p>
+</li>
+<li>
+<p>Каждому процессу передаётся подмножество URL.</p>
+</li>
+<li>
+<p>Внутри процесса создаётся свой engine к БД (подключения не разделяются между процессами).</p>
+</li>
+<li>
+<p>Обработка каждого URL выполняется последовательно (один процесс – один список запросов), используется синхронный requests.</p>
+</li>
+</ul>
+<p><img alt="Результат работы multiprocessing" src="../images/2_multiprocessing.png" /></p>
+<h4 id="threading">Threading</h4>
+<pre><code class="language-python">import os
+import time
+import threading
+from urllib.parse import urlparse, urljoin
+
+import requests
+from bs4 import BeautifulSoup
+from dotenv import load_dotenv
+from sqlmodel import Session, create_engine, select
+
+from models import Workspace, Tag, Task, TaskTag, TaskStatus, TaskPriority
+
+load_dotenv()
+
+DATABASE_URL = os.getenv(&quot;DATABASE_URL&quot;, &quot;&quot;).replace(&quot;+asyncpg&quot;, &quot;+psycopg2&quot;)
+DEFAULT_USER_ID = 1
+
+
+def extract_owner_repo_from_url(url):
+    parsed = urlparse(url)
+    path_parts = [p for p in parsed.path.split(&quot;/&quot;) if p]
+    return path_parts[0], path_parts[1]
+
+
+def parse_issues_from_page(html):
+    soup = BeautifulSoup(html, &quot;html.parser&quot;)
+    tasks = []
+    seen_urls = set()
+
+    title_links = soup.find_all(&quot;a&quot;, attrs={&quot;data-testid&quot;: &quot;issue-pr-title-link&quot;})
+    for link in title_links:
+        issue_url = link.get(&quot;href&quot;, &quot;&quot;)
+        if not issue_url:
+            continue
+        if issue_url.startswith(&quot;/&quot;):
+            issue_url = urljoin(&quot;https://github.com&quot;, issue_url)
+        if issue_url in seen_urls:
+            continue
+        seen_urls.add(issue_url)
+
+        title = link.get_text(strip=True)
+        if not title or len(title) &lt; 3:
+            continue
+
+        labels = []
+        issue_li = link.find_parent(&quot;li&quot;)
+        if issue_li:
+            for badge in issue_li.find_all(&quot;div&quot;, class_=lambda c: c and &quot;TrailingBadge&quot; in c):
+                lbl_span = badge.find(&quot;span&quot;, class_=lambda c: c and &quot;prc-Text-Text-&quot; in c)
+                if lbl_span:
+                    label_text = lbl_span.get_text(strip=True)
+                    if label_text:
+                        labels.append(label_text)
+
+        tasks.append({&quot;title&quot;: title, &quot;url&quot;: issue_url, &quot;labels&quot;: labels})
+    return tasks
+
+
+def get_or_create_workspace(db, full_name, description, owner_id):
+    workspace = db.execute(
+        select(Workspace).where(Workspace.name == full_name)
+    ).scalar_one_or_none()
+    if not workspace:
+        workspace = Workspace(name=full_name, description=description, owner_id=owner_id)
+        db.add(workspace)
+        db.flush()
+    return workspace
+
+
+def task_exists(db, title, workspace_id):
+    return db.execute(
+        select(Task).where(Task.title == title, Task.workspace_id == workspace_id)
+    ).first() is not None
+
+
+def parse_and_save(engine, issues_url, owner_id):
+    owner, repo = extract_owner_repo_from_url(issues_url)
+    full_name = f&quot;{owner}/{repo}&quot;
+
+    headers = {&quot;User-Agent&quot;: &quot;Lab-Parser/1.0&quot;}
+    resp = requests.get(issues_url, headers=headers)
+    resp.raise_for_status()
+
+    soup = BeautifulSoup(resp.text, &quot;html.parser&quot;)
+    title_tag = soup.find(&quot;title&quot;)
+    page_title = title_tag.get_text(strip=True) if title_tag else None
+    description = f&quot;{page_title} | {issues_url}&quot; if page_title else issues_url
+
+    print(f&quot;[{threading.current_thread().name}] Заголовок страницы Issues {full_name}: {page_title}&quot;)
+
+    issues = parse_issues_from_page(resp.text)
+
+    with Session(engine) as db:
+        workspace = get_or_create_workspace(db, full_name, description, owner_id)
+
+        for issue in issues:
+            if task_exists(db, issue[&quot;title&quot;], workspace.id):
+                continue
+
+            task = Task(
+                title=issue[&quot;title&quot;][:300],
+                description=issue[&quot;url&quot;],
+                status=TaskStatus.todo,
+                priority=TaskPriority.medium,
+                owner_id=owner_id,
+                workspace_id=workspace.id,
+            )
+            db.add(task)
+            db.flush()
+
+            seen_labels = set()
+            for label_name in issue[&quot;labels&quot;]:
+                label_name = label_name.strip()
+                if not label_name or label_name in seen_labels:
+                    continue
+                seen_labels.add(label_name)
+
+                tag = db.execute(
+                    select(Tag).where(Tag.name == label_name, Tag.owner_id == owner_id)
+                ).scalars().first()
+                if not tag:
+                    tag = Tag(name=label_name, owner_id=owner_id)
+                    db.add(tag)
+                    db.flush()
+
+                task_tag = TaskTag(task_id=task.id, tag_id=tag.id, is_primary=False)
+                db.add(task_tag)
+
+        db.commit()
+
+
+def thread_target(urls, owner_id, engine):
+    for url in urls:
+        parse_and_save(engine, url, owner_id)
+
+
+def main():
+    urls = [
+        &quot;https://github.com/psf/requests/issues&quot;,
+        &quot;https://github.com/tiangolo/fastapi/issues&quot;,
+        &quot;https://github.com/tiangolo/sqlmodel/issues&quot;,
+        &quot;https://github.com/langchain-ai/langchain/issues&quot;,
+        &quot;https://github.com/pytorch/pytorch/issues&quot;,
+        &quot;https://github.com/Kludex/uvicorn/issues&quot;,
+    ]
+
+    NUM_THREADS = 3
+    chunk_size = len(urls) // NUM_THREADS + (1 if len(urls) % NUM_THREADS else 0)
+    chunks = [urls[i:i + chunk_size] for i in range(0, len(urls), chunk_size)]
+
+    engine = create_engine(DATABASE_URL, echo=False, pool_size=5, max_overflow=10)
+
+    start = time.time()
+    threads = []
+    for chunk in chunks:
+        t = threading.Thread(
+            target=thread_target,
+            args=(chunk, DEFAULT_USER_ID, engine),
+            name=f&quot;Thread-{len(threads)}&quot;
+        )
+        threads.append(t)
+        t.start()
+
+    for t in threads:
+        t.join()
+
+    engine.dispose()
+    elapsed = time.time() - start
+    print(f&quot;\nThreading: выполнение завершено за {elapsed:.2f} сек&quot;)
+
+
+if __name__ == &quot;__main__&quot;:
+    main()
+</code></pre>
+<ul>
+<li>
+<p>Главный поток делит список URL на NUM_THREADS частей.</p>
+</li>
+<li>
+<p>Каждый поток получает свой подсписок URL и общий синхронный engine.</p>
+</li>
+<li>
+<p>Время ожидания сети в каждом потоке - основное место, где GIL отпускается, поэтому несколько потоков могут работать конкурентно.</p>
+</li>
+</ul>
+<p><img alt="Результат работы threading" src="../images/2_threading.png" /></p>
+<h3 id="33">3.3. Результаты выполнения</h3>
+<table>
+<thead>
+<tr>
+<th>Подход</th>
+<th>Время выполнения (сек)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Asyncio</strong></td>
+<td>2,81</td>
+</tr>
+<tr>
+<td><strong>Threading</strong></td>
+<td>2,88</td>
+</tr>
+<tr>
+<td><strong>Multiprocessing</strong></td>
+<td>3,52</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_6">Анализ результатов</h3>
+<ul>
+<li>
+<p>Async (asyncio + aiohttp) оказался самым быстрым. Все запросы к сети и базе данных выполняются асинхронно в одном потоке.  </p>
+</li>
+<li>
+<p>Threading показал близкое к async время, так как requests.get() освобождает GIL на время сетевого ожидания. Небольшой проигрыш вызван затратами на создание потоков и переключение между ними, а также синхронным драйвером БД.  </p>
+</li>
+<li>
+<p>Multiprocessing в данной I/O-bound задаче проигрывает. Создание процессов и дублирование подключений к БД вносят значительную задержку. Внутри каждого процесса используется синхронный код, не способный распараллелить несколько запросов.  </p>
+</li>
+</ul>
+<p><strong>Вывод:</strong> для сетевых и дисковых операций предпочтительнее asyncio или threading, multiprocessing здесь избыточен и медленнее.</p>
+<h2 id="_7">Выводы</h2>
+<ol>
+<li>
+<p>Нет универсального решения: выбор подхода зависит от типа задачи (CPU-bound или I/O-bound).</p>
+</li>
+<li>
+<p>Multiprocessing - оптимальный выбор для параллельных вычислений в Python благодаря обходу GIL.</p>
+</li>
+<li>
+<p>Asyncio - наилучшее решение для высоконагруженных сетевых приложений.</p>
+</li>
+<li>
+<p>Threading - компромиссный вариант для простых I/O-задач, но требует осторожности из-за GIL и потенциальных состояний гонки.</p>
+</li>
+</ol>
+
+  <br>
+    
+
+    
+    
+      
+    
+
+  <div class="row wm-article-nav-buttons" role="navigation" aria-label="navigation">
+    
+    <div class="wm-article-nav">
+      <a href="../../lr1/lr1/" class="btn btn-xs btn-default pull-left">
+        <i class="fa fa-chevron-left" aria-hidden="true"></i>
+        Previous</a><a href="../../lr1/lr1/" class="btn btn-xs btn-link">
+        Лабораторная работа
+      </a>
+    </div>
+    
+  </div>
+
+    <br>
+</div>
+
+<footer class="container-fluid wm-page-content">
+  <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a> using <a href="https://github.com/gristlabs/mkdocs-windmill">Windmill</a> theme by Grist Labs.</p>
+</footer>
+
+</body>
+</html>
