@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+  
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    
+    
+    <link rel="shortcut icon" href="../../img/favicon.ico">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+    <title>Лабораторная работа №3 - Отчеты по лабораторным работам. Генне Константин, K3340</title>
+    <link href="../../css/bootstrap-3.3.7.min.css" rel="stylesheet">
+    <link href="../../css/font-awesome-4.7.0.css" rel="stylesheet">
+    <link href="../../css/base.css" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/highlight.css">
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+    <![endif]-->
+
+    <script src="../../js/jquery-3.2.1.min.js"></script>
+    <script src="../../js/bootstrap-3.3.7.min.js"></script>
+    <script src="../../js/highlight.pack.js"></script>
+    
+    <base target="_top">
+    <script>
+      var base_url = '../..';
+      var is_top_frame = false;
+        
+        var pageToc = [
+          {title: "\u041b\u0430\u0431\u043e\u0440\u0430\u0442\u043e\u0440\u043d\u0430\u044f \u0440\u0430\u0431\u043e\u0442\u0430 3: \u0423\u043f\u0430\u043a\u043e\u0432\u043a\u0430 FastAPI \u043f\u0440\u0438\u043b\u043e\u0436\u0435\u043d\u0438\u044f \u0432 Docker, \u0420\u0430\u0431\u043e\u0442\u0430 \u0441 \u0438\u0441\u0442\u043e\u0447\u043d\u0438\u043a\u0430\u043c\u0438 \u0434\u0430\u043d\u043d\u044b\u0445 \u0438 \u041e\u0447\u0435\u0440\u0435\u0434\u0438", url: "#_top", children: [
+              {title: "\u0421\u0442\u0440\u0443\u043a\u0442\u0443\u0440\u0430 \u043f\u0440\u043e\u0435\u043a\u0442\u0430", url: "#_1" },
+              {title: "\u042d\u043d\u0434\u043f\u043e\u0438\u043d\u0442\u044b", url: "#_2" },
+              {title: "Dockerfile", url: "#dockerfile" },
+              {title: "Docker Compose", url: "#docker-compose" },
+              {title: "\u0417\u0430\u0432\u0438\u0441\u0438\u043c\u043e\u0441\u0442\u0438", url: "#_3" },
+              {title: "\u0412\u044b\u0432\u043e\u0434 \u043a \u0440\u0430\u0431\u043e\u0442\u0435", url: "#_4" },
+          ]},
+        ];
+
+    </script>
+    <script src="../../js/base.js"></script> 
+</head>
+
+<body>
+<script>
+if (is_top_frame) { $('body').addClass('wm-top-page'); }
+</script>
+
+
+
+<div class="container-fluid wm-page-content">
+  <a name="_top"></a>
+    
+
+    
+    
+      
+    
+
+  <div class="row wm-article-nav-buttons" role="navigation" aria-label="navigation">
+    
+    <div class="wm-article-nav">
+      <a href="../../lr2/lr2/" class="btn btn-xs btn-default pull-left">
+        <i class="fa fa-chevron-left" aria-hidden="true"></i>
+        Previous</a><a href="../../lr2/lr2/" class="btn btn-xs btn-link">
+        Лабораторная работа №2
+      </a>
+    </div>
+    
+  </div>
+
+    
+
+    <h1 id="3-fastapi-docker">Лабораторная работа 3: Упаковка FastAPI приложения в Docker, Работа с источниками данных и Очереди</h1>
+<h2 id="_1">Структура проекта</h2>
+<pre><code>.
+├── app/                          # Основное FastAPI-приложение
+│   ├── main.py                   # Точка входа, подключение роутеров
+│   ├── celery_app.py             # Конфигурация Celery (брокер Redis)
+│   ├── celery_tasks.py           # Celery-задача для парсинга
+│   ├── dockerfile                # Dockerfile для api и worker
+│   ├── requirements.txt          # Зависимости основного приложения
+│   ├── alembic.ini               # Конфигурация Alembic
+│   ├── alembic/                  # Миграции БД
+│   ├── core/
+│   │   ├── auth.py               # JWT-аутентификация
+│   │   ├── config.py             # Настройки (pydantic-settings)
+│   │   └── database.py           # Подключение к БД (get_session)
+│   ├── models/                   # SQLModel-модели
+│   │   ├── user.py               # User, UserRole
+│   │   ├── task.py               # Task, TaskStatus, TaskPriority
+│   │   ├── tag.py                # Tag
+│   │   ├── task_tag.py           # TaskTag (M2M)
+│   │   ├── workspace.py          # Workspace
+│   │   └── time_log.py           # TimeLog
+│   ├── schemas/                  # Pydantic-схемы (request/response)
+│   │   ├── user.py
+│   │   ├── task.py
+│   │   ├── tag.py
+│   │   ├── task_tag.py
+│   │   ├── workspace.py
+│   │   ├── time_log.py
+│   │   └── analytics.py
+│   └── routers/                  # Эндпоинты
+│       ├── auth.py               # Регистрация, логин, профиль
+│       ├── tasks.py              # CRUD задач
+│       ├── tags.py               # CRUD тегов
+│       ├── workspaces.py         # CRUD рабочих пространств
+│       ├── analytics.py          # Аналитика по времени
+│       └── parser.py             # Парсинг GitHub Issues
+│
+├── parser_service/               # Микросервис парсера
+│   ├── main.py                   # FastAPI-приложение парсера
+│   ├── parser.py                 # Логика парсинга GitHub Issues
+│   ├── dockerfile                # Dockerfile для parser
+│   └── requirements.txt          # Зависимости парсера
+│
+├── docker-compose.yml            # Оркестрация всех сервисов
+├── .env                          # Пример переменных окружения
+</code></pre>
+<hr />
+<h2 id="_2">Эндпоинты</h2>
+<h3 id="github-issues-apiparser">Парсинг GitHub Issues (<code>/api/parser</code>)</h3>
+<table>
+<thead>
+<tr>
+<th>Метод</th>
+<th>Путь</th>
+<th>Описание</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>POST</td>
+<td><code>/api/parser/parse</code></td>
+<td>Прямой (синхронный) парсинг</td>
+</tr>
+<tr>
+<td>POST</td>
+<td><code>/api/parser/parse/queue</code></td>
+<td>Асинхронный парсинг через Celery</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/parser/status/{task_id}</code></td>
+<td>Статус асинхронной задачи</td>
+</tr>
+<tr>
+<td>GET</td>
+<td><code>/api/parser/health</code></td>
+<td>Health check парсер-сервиса</td>
+</tr>
+</tbody>
+</table>
+<p><strong>POST <code>/api/parser/parse</code></strong> — синхронный вызов</p>
+<pre><code class="language-json">// Request
+{ &quot;url&quot;: &quot;https://github.com/owner/repo/issues&quot; }
+
+// Response 200
+{
+  &quot;success&quot;: true,
+  &quot;message&quot;: &quot;Parsing completed successfully&quot;,
+  &quot;result&quot;: {
+    &quot;success&quot;: true,
+    &quot;tasks_created&quot;: 5,
+    &quot;tags_created&quot;: 3,
+    &quot;workspace&quot;: &quot;owner/repo&quot;,
+    &quot;total_issues_found&quot;: 5
+  }
+}
+</code></pre>
+<p><strong>POST <code>/api/parser/parse/queue</code></strong> — асинхронный вызов через очередь задач</p>
+<pre><code class="language-json">// Request
+{ &quot;url&quot;: &quot;https://github.com/owner/repo/issues&quot; }
+
+// Response 200
+{
+  &quot;task_id&quot;: &quot;550e8400-e29b-41d4-a716-446655440000&quot;,
+  &quot;status&quot;: &quot;PENDING&quot;,
+  &quot;message&quot;: &quot;Parsing task has been queued&quot;
+}
+</code></pre>
+<p><strong>GET <code>/api/parser/status/{task_id}</code></strong> — проверка статуса</p>
+<pre><code class="language-json">// Response 200 (в процессе)
+{
+  &quot;task_id&quot;: &quot;550e8400-...&quot;,
+  &quot;status&quot;: &quot;PROGRESS&quot;,
+  &quot;ready&quot;: false
+}
+
+// Response 200 (завершено)
+{
+  &quot;task_id&quot;: &quot;550e8400-...&quot;,
+  &quot;status&quot;: &quot;SUCCESS&quot;,
+  &quot;ready&quot;: true,
+  &quot;result&quot;: {
+    &quot;success&quot;: true,
+    &quot;tasks_created&quot;: 5,
+    &quot;tags_created&quot;: 3,
+    &quot;workspace&quot;: &quot;owner/repo&quot;,
+    &quot;total_issues_found&quot;: 5
+  }
+}
+</code></pre>
+<hr />
+<h2 id="dockerfile">Dockerfile</h2>
+<h3 id="appdockerfile-api-worker"><code>app/dockerfile</code> — для API и Worker</h3>
+<pre><code class="language-dockerfile">FROM python:3.10-slim
+
+WORKDIR /
+
+RUN apt-get update &amp;&amp; apt-get install -y --no-install-recommends curl &amp;&amp; \
+    apt-get clean &amp;&amp; rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt /app/requirements.txt
+
+RUN pip install --no-cache-dir --upgrade pip &amp;&amp; \
+    pip install --no-cache-dir --upgrade -r /app/requirements.txt
+
+COPY . /app/
+
+CMD [&quot;uvicorn&quot;, &quot;app.main:app&quot;, &quot;--host&quot;, &quot;0.0.0.0&quot;, &quot;--port&quot;, &quot;8000&quot;]
+</code></pre>
+<ul>
+<li><strong>Базовый образ</strong>: <code>python:3.10-slim</code> — минимальный образ Python 3.10</li>
+<li><strong>Утилиты</strong>: <code>curl</code> — для healthcheck-ов</li>
+<li><strong>Зависимости</strong>: устанавливаются из <code>requirements.txt</code> с кэшированием слоя</li>
+<li><strong>Команда</strong>: по умолчанию запускает uvicorn; для worker переопределяется в <code>docker-compose.yml</code></li>
+</ul>
+<h3 id="parser_servicedockerfile"><code>parser_service/dockerfile</code> — для микросервиса парсера</h3>
+<pre><code class="language-dockerfile">FROM python:3.10-slim
+
+WORKDIR /app
+
+RUN apt-get update &amp;&amp; apt-get install -y --no-install-recommends curl &amp;&amp; \
+    apt-get clean &amp;&amp; rm -rf /var/lib/apt/lists/*
+
+COPY parser_service/requirements.txt .
+
+RUN pip install --no-cache-dir --upgrade pip &amp;&amp; \
+    pip install --no-cache-dir --upgrade -r requirements.txt
+
+COPY parser_service/ .
+COPY app/models/ ./app/models/
+COPY app/__init__.py ./app/__init__.py
+
+CMD [&quot;uvicorn&quot;, &quot;main:app&quot;, &quot;--host&quot;, &quot;0.0.0.0&quot;, &quot;--port&quot;, &quot;8001&quot;]
+</code></pre>
+<ul>
+<li><strong>Рабочая директория</strong>: <code>/app</code></li>
+<li><strong>Копирование моделей</strong>: парсер использует SQLModel-модели из <code>app/models/</code></li>
+<li><strong>Порт</strong>: 8001 (отдельный от основного API)</li>
+</ul>
+<hr />
+<h2 id="docker-compose">Docker Compose</h2>
+<p>Файл <code>docker-compose.yml</code> описывает 5 сервисов:</p>
+<table>
+<thead>
+<tr>
+<th>Сервис</th>
+<th>Контейнер</th>
+<th>Зависимости</th>
+<th>Назначение</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>postgres</code></td>
+<td><code>db</code></td>
+<td>—</td>
+<td>База данных PostgreSQL 16 Alpine</td>
+</tr>
+<tr>
+<td><code>redis</code></td>
+<td><code>redis</code></td>
+<td>—</td>
+<td>Брокер сообщений Redis 7 Alpine</td>
+</tr>
+<tr>
+<td><code>api</code></td>
+<td><code>api</code></td>
+<td>postgres (healthy), redis (healthy)</td>
+<td>Основное FastAPI-приложение</td>
+</tr>
+<tr>
+<td><code>parser</code></td>
+<td><code>parser</code></td>
+<td>postgres (healthy)</td>
+<td>Микросервис парсинга</td>
+</tr>
+<tr>
+<td><code>worker</code></td>
+<td><code>worker</code></td>
+<td>postgres (healthy), redis (started), parser (started)</td>
+<td>Celery worker для фоновых задач</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Ключевые особенности</strong>:
+- <strong>Все сервисы</strong> имеют <code>healthcheck</code> для контроля состояния
+- <strong>api</strong> при запуске выполняет <code>alembic upgrade head</code> (миграции БД), затем запускает uvicorn
+- <strong>worker</strong> использует тот же образ, что и api, но с другой командой запуска: <code>celery -A app.celery_app:celery_app worker --loglevel=INFO</code>
+- <strong>parser</strong> собирается из корня проекта (<code>context: .</code>) с указанием <code>dockerfile: parser_service/dockerfile</code>
+- <strong>Переменные окружения</strong> берутся из <code>.env</code> файла (все сервисы используют <code>env_file</code>)
+- <strong>Данные PostgreSQL</strong> сохраняются в volume <code>postgres_data</code>
+- <strong>redis</strong> и <strong>parser</strong> для worker используют <code>condition: service_started</code> (не ждут healthcheck)
+- <strong>restart policy</strong>: <code>unless-stopped</code> для всех сервисов</p>
+<hr />
+<h2 id="_3">Зависимости</h2>
+<h3 id="apprequirementstxt"><code>app/requirements.txt</code></h3>
+<pre><code>fastapi, uvicorn[standard], sqlmodel, psycopg2-binary,
+python-dotenv, requests, celery, redis, alembic,
+pydantic-settings, python-jose[cryptography],
+passlib[bcrypt], bcrypt==4.0.1, email-validator,
+python-multipart
+</code></pre>
+<h3 id="parser_servicerequirementstxt"><code>parser_service/requirements.txt</code></h3>
+<pre><code>fastapi, uvicorn[standard], sqlmodel, psycopg2-binary,
+python-dotenv, beautifulsoup4, requests, sqlalchemy
+</code></pre>
+<hr />
+<h2 id="_4">Вывод к работе</h2>
+<p>В ходе выполнения лабораторной работы был внедрён парсинг задач как отдельный сервис к основному api менеджера времени и задач, FastAPI приложения были упакованы в docker, настроены эндпоинты для прямого вызова парсера из основного API и через Celery. Приложение готово к развёртыванию.</p>
+
+  <br>
+    
+
+    
+    
+      
+    
+
+  <div class="row wm-article-nav-buttons" role="navigation" aria-label="navigation">
+    
+    <div class="wm-article-nav">
+      <a href="../../lr2/lr2/" class="btn btn-xs btn-default pull-left">
+        <i class="fa fa-chevron-left" aria-hidden="true"></i>
+        Previous</a><a href="../../lr2/lr2/" class="btn btn-xs btn-link">
+        Лабораторная работа №2
+      </a>
+    </div>
+    
+  </div>
+
+    <br>
+</div>
+
+<footer class="container-fluid wm-page-content">
+  <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a> using <a href="https://github.com/gristlabs/mkdocs-windmill">Windmill</a> theme by Grist Labs.</p>
+</footer>
+
+</body>
+</html>
