@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+  
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    
+    
+    <link rel="shortcut icon" href="../../img/favicon.ico">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+    <title>Практическое задание 3 - Отчеты по лабораторным работам. Генне Константин, K3340</title>
+    <link href="../../css/bootstrap-3.3.7.min.css" rel="stylesheet">
+    <link href="../../css/font-awesome-4.7.0.css" rel="stylesheet">
+    <link href="../../css/base.css" rel="stylesheet">
+    <link rel="stylesheet" href="../../css/highlight.css">
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+    <![endif]-->
+
+    <script src="../../js/jquery-3.2.1.min.js"></script>
+    <script src="../../js/bootstrap-3.3.7.min.js"></script>
+    <script src="../../js/highlight.pack.js"></script>
+    
+    <base target="_top">
+    <script>
+      var base_url = '../..';
+      var is_top_frame = false;
+        
+        var pageToc = [
+          {title: "\u041f\u0440\u0430\u043a\u0442\u0438\u043a\u0430 1.3. \u041c\u0438\u0433\u0440\u0430\u0446\u0438\u0438, ENV, GitIgnore \u0438 \u0441\u0442\u0440\u0443\u043a\u0442\u0443\u0440\u0430 \u043f\u0440\u043e\u0435\u043a\u0442\u0430", url: "#_top", children: [
+              {title: ".env", url: "#env" },
+              {title: ".gitignore", url: "#gitignore" },
+              {title: "env.py", url: "#envpy" },
+          ]},
+        ];
+
+    </script>
+    <script src="../../js/base.js"></script> 
+</head>
+
+<body>
+<script>
+if (is_top_frame) { $('body').addClass('wm-top-page'); }
+</script>
+
+
+
+<div class="container-fluid wm-page-content">
+  <a name="_top"></a>
+    
+
+    
+    
+      
+    
+
+  <div class="row wm-article-nav-buttons" role="navigation" aria-label="navigation">
+    
+    <div class="wm-article-nav pull-right">
+      <a href="../lr1/" class="btn btn-xs btn-default pull-right">
+        Next
+        <i class="fa fa-chevron-right" aria-hidden="true"></i>
+      </a>
+      <a href="../lr1/" class="btn btn-xs btn-link">
+        Лабораторная работа
+      </a>
+    </div>
+    
+    <div class="wm-article-nav">
+      <a href="../practice_2/" class="btn btn-xs btn-default pull-left">
+        <i class="fa fa-chevron-left" aria-hidden="true"></i>
+        Previous</a><a href="../practice_2/" class="btn btn-xs btn-link">
+        Практическое задание 2
+      </a>
+    </div>
+    
+  </div>
+
+    
+
+    <h1 id="13-env-gitignore">Практика 1.3. Миграции, ENV, GitIgnore и структура проекта</h1>
+<p>В ходе 3 практики были реализованы миграции с помощью Alembic, подготовлены файлы .env и .gitignore. </p>
+<h2 id="env">.env</h2>
+<pre><code>DATABASE_URL=postgresql://postgres:123@localhost/timemanagement_system_db
+SECRET_KEY=super_secret_key
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+</code></pre>
+<h2 id="gitignore">.gitignore</h2>
+<pre><code>__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+venv/
+.venv/
+env/
+
+
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+
+*.env
+
+
+*.log
+
+
+.pytest_cache/
+.coverage
+htmlcov/
+</code></pre>
+<h2 id="envpy">env.py</h2>
+<p>Была осуществлена передача URL БД в Alembic. В alembic.ini ссылка убрана.</p>
+<pre><code class="language-python">import os
+from dotenv import load_dotenv
+from logging.config import fileConfig
+
+from sqlalchemy import engine_from_config
+from sqlalchemy import pool
+
+from alembic import context
+
+from models import *
+
+load_dotenv()
+
+# this is the Alembic Config object, which provides
+# access to the values within the .ini file in use.
+config = context.config
+database_url = os.getenv(&quot;DATABASE_URL&quot;)
+if database_url:
+    config.set_main_option(&quot;sqlalchemy.url&quot;, database_url)
+
+# Interpret the config file for Python logging.
+# This line sets up loggers basically.
+if config.config_file_name is not None:
+    fileConfig(config.config_file_name)
+
+# add your model's MetaData object here
+# for 'autogenerate' support
+# from myapp import mymodel
+# target_metadata = mymodel.Base.metadata
+target_metadata = SQLModel.metadata
+
+# other values from the config, defined by the needs of env.py,
+# can be acquired:
+# my_important_option = config.get_main_option(&quot;my_important_option&quot;)
+# ... etc.
+
+
+def run_migrations_offline() -&gt; None:
+    &quot;&quot;&quot;Run migrations in 'offline' mode.
+
+    This configures the context with just a URL
+    and not an Engine, though an Engine is acceptable
+    here as well.  By skipping the Engine creation
+    we don't even need a DBAPI to be available.
+
+    Calls to context.execute() here emit the given string to the
+    script output.
+
+    &quot;&quot;&quot;
+    url = config.get_main_option(&quot;sqlalchemy.url&quot;)
+    context.configure(
+        url=url,
+        target_metadata=target_metadata,
+        literal_binds=True,
+        dialect_opts={&quot;paramstyle&quot;: &quot;named&quot;},
+    )
+
+    with context.begin_transaction():
+        context.run_migrations()
+
+
+def run_migrations_online() -&gt; None:
+    &quot;&quot;&quot;Run migrations in 'online' mode.
+
+    In this scenario we need to create an Engine
+    and associate a connection with the context.
+
+    &quot;&quot;&quot;
+    connectable = engine_from_config(
+        config.get_section(config.config_ini_section, {}),
+        prefix=&quot;sqlalchemy.&quot;,
+        poolclass=pool.NullPool,
+    )
+
+    with connectable.connect() as connection:
+        context.configure(
+            connection=connection, target_metadata=target_metadata
+        )
+
+        with context.begin_transaction():
+            context.run_migrations()
+
+
+if context.is_offline_mode():
+    run_migrations_offline()
+else:
+    run_migrations_online()
+
+</code></pre>
+
+  <br>
+    
+
+    
+    
+      
+    
+
+  <div class="row wm-article-nav-buttons" role="navigation" aria-label="navigation">
+    
+    <div class="wm-article-nav pull-right">
+      <a href="../lr1/" class="btn btn-xs btn-default pull-right">
+        Next
+        <i class="fa fa-chevron-right" aria-hidden="true"></i>
+      </a>
+      <a href="../lr1/" class="btn btn-xs btn-link">
+        Лабораторная работа
+      </a>
+    </div>
+    
+    <div class="wm-article-nav">
+      <a href="../practice_2/" class="btn btn-xs btn-default pull-left">
+        <i class="fa fa-chevron-left" aria-hidden="true"></i>
+        Previous</a><a href="../practice_2/" class="btn btn-xs btn-link">
+        Практическое задание 2
+      </a>
+    </div>
+    
+  </div>
+
+    <br>
+</div>
+
+<footer class="container-fluid wm-page-content">
+  <p>Documentation built with <a href="https://www.mkdocs.org/">MkDocs</a> using <a href="https://github.com/gristlabs/mkdocs-windmill">Windmill</a> theme by Grist Labs.</p>
+</footer>
+
+</body>
+</html>
